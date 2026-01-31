@@ -1,8 +1,10 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 const titleInput = ref('')
 const categoryInput = ref('General')
 
+const searchQuery = ref('')
+const selectedCategory = ref('All')
 // daftar rencana foto
 const photoProjects = ref([
   
@@ -22,11 +24,50 @@ const addNewProject = () => {
     categoryInput.value = 'General'
   }
 }
+
+const filteredProjects = computed(() => {
+  return photoProjects.value.filter((project) => {
+    const matchSearch = project.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchCategory = selectedCategory.value === 'All' || project.category === selectedCategory.value
+    return matchSearch && matchCategory
+  })
+})
 </script>
 
 <template>
  <div class="main-container">
   <h1>Photo Planner</h1>
+  <div class="search-filter-section">
+      <input 
+        v-model="searchQuery" 
+        placeholder="Cari judul project..." 
+        class="search-bar"
+      >
+      <div class="category-tabs">
+        <button 
+          v-for="cat in ['All', 'Nature', 'Urban', 'Graduation', 'Family']" 
+          :key="cat"
+          @click="selectedCategory = cat"
+          :class="{ 'active-tab': selectedCategory === cat }"
+        >
+          {{ cat }}
+        </button>
+      </div>
+    </div>
+    <div class="list-container">
+      <div v-for="item in filteredProjects" :key="item.id" class="card">
+        <span class="category-tag">{{ item.category }}</span>
+        <h3 :class="{ 'coret': item.isDone }">{{ item.title }}</h3>
+        <div class="card-action">
+          <label>
+            <input type="checkbox" v-model="item.isDone">
+            {{ item.isDone ? 'Selesai' : 'Rencana' }}
+          </label>
+        </div>
+    </div>
+    </div>
+  
+
   <form class="form-box" @submit.prevent="addNewProject">
     <input v-model="titleInput"
     @keyup.enter="addNewProject" placeholder="Write your ideas here...">
@@ -42,17 +83,18 @@ const addNewProject = () => {
 
   <hr>
 
-  <div class="list-container">
-    <div v-for="item in photoProjects" :key="item.id" class="list-item">
-      <h3>{{ item.title }}</h3>
-      <p>Kategori: {{ item.category }}</p>
+  <!-- <div class="list-container">
+    <div v-for="item in photoProjects" :key="item.id" class="card">
+      <span class="category-tag">{{ item.category }}</span>
+      <h3 :class="{ 'coret': item.isDone }">{{ item.title }}</h3>
 
       <label for="">
         <input type="checkbox" v-model="item.isDone">
         {{ item.isDone ? 'Selesai' : 'Rencana' }}
       </label>
+      <button @click="deleteProject(item.id)" class="btn-delete">Hapus</button>
     </div>
-  </div>
+  </div> -->
 
  </div>
 </template>
@@ -142,5 +184,62 @@ button:hover {
   font-size: 12px;
   background: #edf2f7;
   margin-bottom: 10px;
+}
+
+/* seacrh bar dan tabs */
+/* Container untuk Search dan Tabs */
+.search-filter-section {
+  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Styling Search Bar */
+.search-bar {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #edf2f7;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: border-color 0.3s;
+  outline: none;
+}
+
+.search-bar:focus {
+  border-color: #42b883; /* Hijau Vue saat diklik */
+}
+
+/* Container Tabs */
+.category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Styling Tombol Tab */
+.category-tabs button {
+  padding: 8px 16px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #4a5568;
+  border-radius: 20px; /* Membuat lonjong/pill-shaped */
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.category-tabs button:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+/* Tab yang sedang Aktif (Selected) */
+.category-tabs button.active-tab {
+  background: #35495e; /* Biru gelap Vue */
+  color: white;
+  border-color: #35495e;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 </style>
